@@ -1,0 +1,491 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #01161E;
+  color: #EFF6E0;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ── Layout ── */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem;
+  gap: 1.5rem;
+}
+
+.app-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #AEC3B0;
+  letter-spacing: 0.02em;
+}
+
+/* ── Phase: input ── */
+
+.pgn-input-card {
+  background: #124559;
+  border: 1px solid #01161E;
+  border-radius: 12px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pgn-input-card h2 {
+  font-size: 1.1rem;
+  color: #AEC3B0;
+}
+
+.pgn-input-card textarea {
+  width: 100%;
+  height: 200px;
+  background: #01161E;
+  border: 1px solid #598392;
+  border-radius: 8px;
+  color: #EFF6E0;
+  font-family: "Courier New", monospace;
+  font-size: 0.85rem;
+  padding: 0.75rem;
+  resize: vertical;
+  outline: none;
+}
+
+.pgn-input-card textarea:focus {
+  border-color: #AEC3B0;
+}
+
+.pgn-input-card .error {
+  color: #ff6b6b;
+  font-size: 0.85rem;
+}
+
+/* ── Phase: setup ── */
+
+.setup-layout {
+  display: flex;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 900px;
+  align-items: flex-start;
+}
+
+/* ── Phase: drilling ── */
+
+.drill-layout {
+  display: flex;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1000px;
+  align-items: flex-start;
+}
+
+/* ── Buttons ── */
+
+.btn {
+  padding: 0.55rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.btn:hover {
+  opacity: 0.85;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: #AEC3B0;
+  color: #01161E;
+}
+
+.btn-secondary {
+  background: #01161E;
+  color: #AEC3B0;
+  border: 1px solid #598392;
+}
+
+.btn-danger {
+  background: #c0392b;
+  color: #fff;
+}
+
+.btn-success {
+  background: #27ae60;
+  color: #fff;
+}
+
+/* ── Color Picker ── */
+
+.color-picker {
+  background: #124559;
+  border: 1px solid #01161E;
+  border-radius: 12px;
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 180px;
+}
+
+.color-picker h3 {
+  color: #AEC3B0;
+  font-size: 0.95rem;
+}
+
+.color-btn {
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: border-color 0.15s;
+}
+
+.color-btn.white {
+  background: #f0d9b5;
+  color: #01161E;
+}
+
+.color-btn.black {
+  background: #2d2d2d;
+  color: #f0d9b5;
+}
+
+.color-btn.selected {
+  border-color: #AEC3B0;
+}
+
+/* ── Lines Sidebar ── */
+
+.lines-sidebar {
+  background: #124559;
+  border: 1px solid #01161E;
+  border-radius: 12px;
+  padding: 1rem;
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 600px;
+}
+
+.lines-sidebar h3 {
+  color: #AEC3B0;
+  font-size: 0.95rem;
+}
+
+.lines-sidebar .sidebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.auto-advance-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: #8aaa9a;
+  cursor: pointer;
+  user-select: none;
+}
+
+.auto-advance-toggle input {
+  cursor: pointer;
+}
+
+.lines-list {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+}
+
+.line-item {
+  padding: 0.45rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: "Courier New", monospace;
+  color: #AEC3B0;
+  background: transparent;
+  text-align: left;
+  transition: background 0.1s, color 0.1s;
+}
+
+.line-item:hover {
+  background: #01161E;
+  color: #EFF6E0;
+}
+
+.line-item.selected {
+  background: #01161E;
+  border-color: #AEC3B0;
+  color: #AEC3B0;
+}
+
+/* ── Drill Session ── */
+
+.drill-session {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.drill-info {
+  background: #124559;
+  border: 1px solid #01161E;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.drill-info .line-label {
+  font-size: 0.8rem;
+  font-family: "Courier New", monospace;
+  color: #AEC3B0;
+}
+
+.drill-info .move-progress {
+  font-size: 0.8rem;
+  color: #6d8a82;
+}
+
+.board-wrapper {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.board-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.board-overlay.flash-wrong {
+  background: rgba(220, 50, 50, 0.35);
+  animation: flash 0.5s ease-out forwards;
+}
+
+@keyframes flash {
+  0%   { background: rgba(220, 50, 50, 0.45); }
+  100% { background: transparent; }
+}
+
+.drill-status {
+  background: #124559;
+  border: 1px solid #01161E;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 56px;
+}
+
+.status-msg {
+  font-size: 0.9rem;
+}
+
+.status-msg.wrong { color: #ff6b6b; }
+.status-msg.correct { color: #2ecc71; }
+.status-msg.complete { color: #f0c040; font-weight: 600; }
+.status-msg.waiting { color: #6d8a82; }
+
+.status-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.move-list {
+  font-family: "Courier New", monospace;
+  font-size: 0.78rem;
+  color: #6d8a82;
+  background: #124559;
+  border: 1px solid #01161E;
+  border-radius: 10px;
+  padding: 0.6rem 0.9rem;
+  line-height: 1.6;
+}
+
+.move-list .played {
+  color: #AEC3B0;
+}
+
+/* ── Input tabs ── */
+
+.input-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid #01161E;
+  margin-bottom: 0.25rem;
+}
+
+.input-tab {
+  padding: 0.45rem 1.1rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #6d8a82;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px;
+}
+
+.input-tab:hover {
+  color: #AEC3B0;
+}
+
+.input-tab.active {
+  color: #AEC3B0;
+  border-bottom-color: #AEC3B0;
+}
+
+/* ── YouTube import ── */
+
+.yt-import-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.yt-url-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  background: #01161E;
+  border: 1px solid #598392;
+  border-radius: 8px;
+  color: #EFF6E0;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.yt-url-input:focus {
+  border-color: #AEC3B0;
+}
+
+.yt-url-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Save name input ── */
+
+.save-name-input {
+  padding: 0.5rem 0.75rem;
+  background: #01161E;
+  border: 1px solid #598392;
+  border-radius: 8px;
+  color: #EFF6E0;
+  font-size: 0.85rem;
+  outline: none;
+  width: 200px;
+}
+
+.save-name-input:focus {
+  border-color: #AEC3B0;
+}
+
+/* ── Saved Entries ── */
+
+.saved-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  border-top: 1px solid #01161E;
+  padding-top: 0.75rem;
+}
+
+.saved-entries h3 {
+  font-size: 0.85rem;
+  color: #AEC3B0;
+}
+
+.saved-entries-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.saved-entry {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.saved-entry-load {
+  display: block;
+  width: 100%;
+  padding: 0.55rem 1.8rem 0.55rem 0.65rem;
+  background: #01161E;
+  border: 1px solid #598392;
+  border-radius: 8px;
+  color: #AEC3B0;
+  font-size: 0.8rem;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 0.1s, color 0.1s;
+}
+
+.saved-entry-load:hover {
+  background: #598392;
+  color: #EFF6E0;
+}
+
+.saved-entry-delete {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+  padding: 0 4px;
+  background: transparent;
+  border: none;
+  color: #3d6070;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.saved-entry-delete:hover {
+  color: #ff6b6b;
+}
