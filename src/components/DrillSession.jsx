@@ -2,13 +2,13 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
 
-export default function DrillSession({ line, playerColor, onBack, autoAdvance, onLineComplete }) {
+export default function DrillSession({ line, playerColor, onBack, autoAdvance, onLineComplete, boardWidth = 480 }) {
   const [game, setGame] = useState(new Chess());
   const [moveIndex, setMoveIndex] = useState(0);
   // status: "playing" | "wrong" | "complete" | "opponent"
   const [status, setStatus] = useState("playing");
   const [flashWrong, setFlashWrong] = useState(false);
-  const [showCorrectMoves, setShowCorrectMoves] = useState(false);
+
   const wrongTimerRef = useRef(null);
   const opponentTimerRef = useRef(null);
   const autoAdvanceTimerRef = useRef(null);
@@ -152,18 +152,6 @@ export default function DrillSession({ line, playerColor, onBack, autoAdvance, o
 
   const boardOrientation = playerColor === "white" ? "white" : "black";
 
-  // Build move display
-  const playedMoves = line.moves.slice(0, moveIndex);
-  const remainingMoves = line.moves.slice(moveIndex);
-
-  function formatMoveList(moves, startIndex = 0) {
-    return moves.map((m, i) => {
-      const ply = startIndex + i;
-      const num = Math.floor(ply / 2) + 1;
-      return ply % 2 === 0 ? `${num}.${m}` : m;
-    });
-  }
-
   const isPlayerTurn =
     status === "playing" &&
     ((playerColor === "white" && game.turn() === "w") ||
@@ -183,7 +171,7 @@ export default function DrillSession({ line, playerColor, onBack, autoAdvance, o
           position={game.fen()}
           onPieceDrop={onPieceDrop}
           boardOrientation={boardOrientation}
-          boardWidth={480}
+          boardWidth={boardWidth}
           arePiecesDraggable={isPlayerTurn}
         />
         <div className={`board-overlay${flashWrong ? " flash-wrong" : ""}`} />
@@ -192,9 +180,6 @@ export default function DrillSession({ line, playerColor, onBack, autoAdvance, o
       <div className="drill-status">
         <StatusMessage
           status={status}
-          moveIndex={moveIndex}
-          total={line.moves.length}
-          expectedMove={line.moves[moveIndex]}
           playerColor={playerColor}
           game={game}
         />
@@ -206,28 +191,17 @@ export default function DrillSession({ line, playerColor, onBack, autoAdvance, o
               </button>
             </>
           )}
-          <button className="btn btn-secondary" onClick={onBack}>
+          <button className="btn btn-secondary mobile-hide" onClick={onBack}>
             ← Lines
           </button>
         </div>
       </div>
 
-      {showCorrectMoves && (
-        <div className="move-list">
-        <span className="played">{formatMoveList(playedMoves).join(" ")}</span>
-        {playedMoves.length > 0 && remainingMoves.length > 0 && " "}
-        <span style={{ color: "#404055" }}>
-          {formatMoveList(remainingMoves, moveIndex).join(" ")}
-        </span>
-      </div>
-      )}
-
-      
     </div>
   );
 }
 
-function StatusMessage({ status, moveIndex, total, expectedMove, playerColor, game }) {
+function StatusMessage({ status, playerColor, game }) {
   const isMyTurn =
     (playerColor === "white" && game.turn() === "w") ||
     (playerColor === "black" && game.turn() === "b");

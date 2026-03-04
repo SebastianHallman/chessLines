@@ -14,11 +14,29 @@ No test framework is configured.
 
 ## Architecture
 
+### File organisation convention
+Each distinct UI phase/screen lives in its own file under `src/views/`. Shared sub-components (no routing logic) go under `src/components/`. **Always follow this split** — never embed a full view inline inside another file.
+
+```
+src/
+  views/
+    InputView.jsx    ← "input" phase
+    SetupView.jsx    ← "setup" phase
+    DrillView.jsx    ← "drilling" phase
+  components/
+    ColorPicker.jsx
+    LinesSidebar.jsx
+    DrillSession.jsx
+  lib/
+    pgnParser.js
+    lineExtractor.js
+```
+
 ### App phases
 `App.jsx` controls a three-phase flow via `phase` state:
-- `"input"` — user pastes or loads a saved PGN (`PGNInput`)
-- `"setup"` — lines are extracted, user picks color and line (`ColorPicker` + `LinesSidebar`)
-- `"drilling"` — active drill (`DrillSession` + `LinesSidebar`)
+- `"input"` — user pastes or loads a saved PGN (`InputView`)
+- `"setup"` — lines are extracted, user picks color and line (`SetupView`)
+- `"drilling"` — active drill (`DrillView`)
 
 Saved PGNs persist in `localStorage` under the key `"chess-saved-pgns"` as `[{ name, pgn }]`.
 

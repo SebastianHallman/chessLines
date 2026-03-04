@@ -26,8 +26,19 @@ function extractPgnFromText(text) {
   return (stop === -1 ? slice : slice.slice(0, stop)).trim();
 }
 
-export default function PGNInput({ onParsed, savedPGNs, onDeleteSaved }) {
-  const [tab, setTab] = useState("manual"); // "manual" | "youtube"
+export default function SetupSidebar({
+  hasLines,
+  onParsed,
+  savedPGNs,
+  onDeleteSaved,
+  playerColor,
+  onColorChange,
+  saveName,
+  onSaveNameChange,
+  onSave,
+  onReset,
+}) {
+  const [tab, setTab] = useState("manual");
   const [text, setText] = useState("");
   const [error, setError] = useState("");
   const [ytUrl, setYtUrl] = useState("");
@@ -73,7 +84,6 @@ export default function PGNInput({ onParsed, savedPGNs, onDeleteSaved }) {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
-
       let html;
       try {
         const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(`https://www.youtube.com/watch?v=${id}`)}`;
@@ -93,39 +103,22 @@ export default function PGNInput({ onParsed, savedPGNs, onDeleteSaved }) {
         throw e;
       }
 
-      if (!html) {
-        setYtError("Empty response from proxy.");
-        return;
-      }
+      if (!html) { setYtError("Empty response from proxy."); return; }
 
       let description = null;
-
-      // Try ytInitialData shortDescription
       const sdMatch = html.match(/"shortDescription":"((?:[^"\\]|\\.)*)"/);
       if (sdMatch) {
-        try {
-          description = JSON.parse('"' + sdMatch[1] + '"');
-        } catch {
-          description = sdMatch[1];
-        }
+        try { description = JSON.parse('"' + sdMatch[1] + '"'); }
+        catch { description = sdMatch[1]; }
       }
-
-      // Fallback: og:description meta tag
       if (!description) {
         const metaMatch = html.match(/<meta\s+property="og:description"\s+content="([^"]*)"/);
         if (metaMatch) description = metaMatch[1];
       }
-
-      if (!description) {
-        setYtError("Could not extract description from the YouTube page.");
-        return;
-      }
+      if (!description) { setYtError("Could not extract description from the YouTube page."); return; }
 
       const pgn = extractPgnFromText(description);
-      if (!pgn) {
-        setYtError("No PGN found in the video description.");
-        return;
-      }
+      if (!pgn) { setYtError("No PGN found in the video description."); return; }
 
       setText(pgn);
       tryParse(pgn);
@@ -137,25 +130,28 @@ export default function PGNInput({ onParsed, savedPGNs, onDeleteSaved }) {
   }
 
   return (
-    <div className="pgn-input-card">
+    <div className="setup-sidebar">
+      <h1 className="app-title">Drill my lines</h1>
+
       <div className="input-tabs">
         <button
           className={`input-tab${tab === "manual" ? " active" : ""}`}
           onClick={() => setTab("manual")}
         >
-          Manual PGN
+          PGN
         </button>
         <button
           className={`input-tab${tab === "youtube" ? " active" : ""}`}
           onClick={() => setTab("youtube")}
         >
-          PGN from YouTube Video
+          YouTube
         </button>
       </div>
 
       {tab === "manual" && (
         <>
           <textarea
+            className="sidebar-textarea"
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={EXAMPLE_PGN}
@@ -164,10 +160,10 @@ export default function PGNInput({ onParsed, savedPGNs, onDeleteSaved }) {
           {error && <p className="error">{error}</p>}
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button className="btn btn-primary" onClick={handleParse}>
-              Load Lines
+              Load
             </button>
             <button className="btn btn-secondary" onClick={handleExample}>
-              Use Example
+              Example
             </button>
           </div>
         </>
@@ -175,31 +171,30 @@ export default function PGNInput({ onParsed, savedPGNs, onDeleteSaved }) {
 
       {tab === "youtube" && (
         <>
-          <div className="yt-import-row">
-            <input
-              className="yt-url-input"
-              type="text"
-              placeholder="https://www.youtube.com/watch?v=..."
-              value={ytUrl}
-              onChange={(e) => setYtUrl(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && !ytLoading && ytUrl.trim() && handleYtImport()}
-              disabled={ytLoading}
-            />
-            <button
-              className="btn btn-secondary"
-              onClick={handleYtImport}
-              disabled={ytLoading || !ytUrl.trim()}
-            >
-              {ytLoading ? "Fetching…" : "Import"}
-            </button>
-          </div>
+          <input
+            className="yt-url-input"
+            type="text"
+            placeholder="https://www.youtube.com/watch?v=..."
+            value={ytUrl}
+            onChange={(e) => setYtUrl(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && !ytLoading && ytUrl.trim() && handleYtImport()}
+            disabled={ytLoading}
+          />
+          <button
+            className="btn btn-secondary"
+            onClick={handleYtImport}
+            disabled={ytLoading || !ytUrl.trim()}
+          >
+            {ytLoading ? "Fetching…" : "Import"}
+          </button>
           {ytError && <p className="error">{ytError}</p>}
         </>
       )}
+
       {savedPGNs && savedPGNs.length > 0 && (
         <div className="saved-entries">
           <h3>Saved</h3>
-          <div className="saved-entries-grid">
+          <div className="saved-entries-list">
             {savedPGNs.map((entry, i) => (
               <div key={i} className="saved-entry">
                 <button className="saved-entry-load" onClick={() => handleLoadSaved(entry.pgn)}>
@@ -212,6 +207,43 @@ export default function PGNInput({ onParsed, savedPGNs, onDeleteSaved }) {
             ))}
           </div>
         </div>
+      )}
+
+      {hasLines && (
+        <>
+          <hr className="sidebar-divider" />
+          <div className="color-picker-row">
+            <span className="color-picker-label">Play as</span>
+            <button
+              className={`color-btn white${playerColor === "white" ? " selected" : ""}`}
+              onClick={() => onColorChange("white")}
+            >
+              ♔ White
+            </button>
+            <button
+              className={`color-btn black${playerColor === "black" ? " selected" : ""}`}
+              onClick={() => onColorChange("black")}
+            >
+              ♚ Black
+            </button>
+          </div>
+          <div className="sidebar-save-row">
+            <input
+              className="save-name-input"
+              type="text"
+              value={saveName}
+              onChange={(e) => onSaveNameChange(e.target.value)}
+              placeholder="Entry name…"
+              onKeyDown={(e) => e.key === "Enter" && onSave()}
+            />
+            <button className="btn btn-secondary" onClick={onSave} disabled={!saveName.trim()}>
+              Save
+            </button>
+          </div>
+          <button className="btn btn-secondary" onClick={onReset}>
+            ← New PGN
+          </button>
+        </>
       )}
     </div>
   );

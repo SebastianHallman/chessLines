@@ -1,17 +1,14 @@
 import { useState } from "react";
-import PGNInput from "./components/PGNInput.jsx";
-import ColorPicker from "./components/ColorPicker.jsx";
-import LinesSidebar from "./components/LinesSidebar.jsx";
-import DrillSession from "./components/DrillSession.jsx";
+import SetupSidebar from "./components/SetupSidebar.jsx";
+import BoardView from "./views/BoardView.jsx";
 
 export default function App() {
-  const [phase, setPhase] = useState("input"); // "input" | "setup" | "drilling"
   const [lines, setLines] = useState([]);
   const [currentPGN, setCurrentPGN] = useState("");
   const [selectedLine, setSelectedLine] = useState(null);
   const [playerColor, setPlayerColor] = useState("white");
   const [autoAdvance, setAutoAdvance] = useState(false);
-  const [selectionMode, setSelectionMode] = useState("sequential"); // "sequential" | "random"
+  const [selectionMode, setSelectionMode] = useState("sequential");
   const [savedPGNs, setSavedPGNs] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("chess-saved-pgns") || "[]");
@@ -20,13 +17,14 @@ export default function App() {
     }
   });
   const [saveName, setSaveName] = useState("");
+  const [mobileTab, setMobileTab] = useState("setup");
 
   function handleParsed(extractedLines, pgnText) {
     setLines(extractedLines);
     setCurrentPGN(pgnText);
     setSelectedLine(null);
     setSaveName(extractedLines[0]?.label?.split(" ").slice(0, 4).join(" ") || "Opening");
-    setPhase("setup");
+    setMobileTab("lines");
   }
 
   function handleSave() {
@@ -46,7 +44,7 @@ export default function App() {
   function handleSelectLine(line) {
     setSelectionMode("sequential");
     setSelectedLine(line);
-    setPhase("drilling");
+    setMobileTab("board");
   }
 
   function handlePickRandom() {
@@ -54,7 +52,7 @@ export default function App() {
     setSelectionMode("random");
     const idx = Math.floor(Math.random() * lines.length);
     setSelectedLine(lines[idx]);
-    setPhase("drilling");
+    setMobileTab("board");
   }
 
   function handleLineComplete() {
@@ -67,78 +65,71 @@ export default function App() {
     }
   }
 
-  function handleBack() {
-    setPhase("setup");
-  }
-
   function handleReset() {
     setLines([]);
     setSelectedLine(null);
-    setPhase("input");
+    setMobileTab("setup");
   }
 
+  const hasLines = lines.length > 0;
+
   return (
-    <div className="app">
-      <h1 className="app-title">ChessLines</h1>
-
-      {phase === "input" && (
-        <PGNInput onParsed={handleParsed} savedPGNs={savedPGNs} onDeleteSaved={handleDeleteSaved} />
-      )}
-
-      {phase === "setup" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", width: "100%", maxWidth: "900px" }}>
-          <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-            <button className="btn btn-secondary" onClick={handleReset}>
-              ← New PGN
-            </button>
-            <input
-              className="save-name-input"
-              type="text"
-              value={saveName}
-              onChange={(e) => setSaveName(e.target.value)}
-              placeholder="Entry name…"
-              onKeyDown={(e) => e.key === "Enter" && handleSave()}
-            />
-            <button className="btn btn-secondary" onClick={handleSave} disabled={!saveName.trim()}>
-              Save
-            </button>
-            <span style={{ color: "#808090", fontSize: "0.85rem" }}>
-              {lines.length} line{lines.length !== 1 ? "s" : ""} extracted
-            </span>
-          </div>
-          <div className="setup-layout">
-            <ColorPicker value={playerColor} onChange={setPlayerColor} />
-            <LinesSidebar
-              lines={lines}
-              selectedLine={selectedLine}
-              onSelectLine={handleSelectLine}
-              onPickRandom={handlePickRandom}
-              autoAdvance={autoAdvance}
-              onToggleAutoAdvance={() => setAutoAdvance((a) => !a)}
-            />
-          </div>
-        </div>
-      )}
-
-      {phase === "drilling" && selectedLine && (
-        <div className="drill-layout">
-          <DrillSession
-            line={selectedLine}
-            playerColor={playerColor}
-            onBack={handleBack}
-            autoAdvance={autoAdvance}
-            onLineComplete={handleLineComplete}
-          />
-          <LinesSidebar
+    <div className="app" data-tab={mobileTab}>
+      <SetupSidebar
+        hasLines={hasLines}
+        onParsed={handleParsed}
+        savedPGNs={savedPGNs}
+        onDeleteSaved={handleDeleteSaved}
+        playerColor={playerColor}
+        onColorChange={setPlayerColor}
+        saveName={saveName}
+        onSaveNameChange={setSaveName}
+        onSave={handleSave}
+        onReset={handleReset}
+      />
+      <div className="main-area">
+        {!hasLines ? (
+          <p className="empty-state">Load a PGN to start drilling</p>
+        ) : (
+          <BoardView
             lines={lines}
+            playerColor={playerColor}
             selectedLine={selectedLine}
             onSelectLine={handleSelectLine}
             onPickRandom={handlePickRandom}
             autoAdvance={autoAdvance}
             onToggleAutoAdvance={() => setAutoAdvance((a) => !a)}
+            onLineComplete={handleLineComplete}
+            onDeselectLine={() => { setSelectedLine(null); setMobileTab("lines"); }}
           />
-        </div>
-      )}
+        )}
+      </div>
+
+      <nav className="mobile-tab-bar">
+        <button
+          className={`mobile-tab-btn${mobileTab === "setup" ? " active" : ""}`}
+          onClick={() => setMobileTab("setup")}
+        >
+          <span className="tab-icon">⚙</span>
+          Setup
+        </button>
+        <button
+          className={`mobile-tab-btn${mobileTab === "lines" ? " active" : ""}`}
+          onClick={() => setMobileTab("lines")}
+          disabled={!hasLines}
+        >
+          <span className="tab-icon">≡</span>
+          Lines
+        </button>
+        <button
+          className={`mobile-tab-btn${mobileTab === "board" ? " active" : ""}`}
+          onClick={() => setMobileTab("board")}
+          disabled={!hasLines}
+        >
+          <span className="tab-icon">♟</span>
+          Board
+        </button>
+      </nav>
     </div>
   );
 }
