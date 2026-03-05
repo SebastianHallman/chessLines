@@ -68,22 +68,28 @@ export default function InputView({ onParsed, savedPGNs, onDeleteSaved }) {
       setYtError("Could not find a valid YouTube video ID in that URL.");
       return;
     }
+    const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY;
+    if (!apiKey) {
+      setYtError("YouTube API key not configured");
+      return;
+    }
     setYtLoading(true);
     setYtError("");
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
-
-      let html;
+      let data;
       try {
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(`https://www.youtube.com/watch?v=${id}`)}`;
-        const res = await fetch(proxyUrl, { signal: controller.signal });
+        const res = await fetch(
+          `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${id}&key=${apiKey}`,
+          { signal: controller.signal }
+        );
         clearTimeout(timeoutId);
         if (!res.ok) {
-          setYtError(`Proxy returned HTTP ${res.status}`);
+          setYtError(`YouTube API error: HTTP ${res.status}`);
           return;
         }
-        html = await res.text();
+        data = await res.json();
       } catch (e) {
         clearTimeout(timeoutId);
         if (e.name === "AbortError") {
@@ -93,31 +99,9 @@ export default function InputView({ onParsed, savedPGNs, onDeleteSaved }) {
         throw e;
       }
 
-      if (!html) {
-        setYtError("Empty response from proxy.");
-        return;
-      }
-
-      let description = null;
-
-      // Try ytInitialData shortDescription
-      const sdMatch = html.match(/"shortDescription":"((?:[^"\\]|\\.)*)"/);
-      if (sdMatch) {
-        try {
-          description = JSON.parse('"' + sdMatch[1] + '"');
-        } catch {
-          description = sdMatch[1];
-        }
-      }
-
-      // Fallback: og:description meta tag
+      const description = data.items?.[0]?.snippet?.description;
       if (!description) {
-        const metaMatch = html.match(/<meta\s+property="og:description"\s+content="([^"]*)"/);
-        if (metaMatch) description = metaMatch[1];
-      }
-
-      if (!description) {
-        setYtError("Could not extract description from the YouTube page.");
+        setYtError("Could not retrieve video description.");
         return;
       }
 
