@@ -8,6 +8,7 @@ export default function DrillSession({ line, playerColor, onBack, autoAdvance, o
   // status: "playing" | "wrong" | "complete" | "opponent"
   const [status, setStatus] = useState("playing");
   const [flashWrong, setFlashWrong] = useState(false);
+  const [selectedSquare, setSelectedSquare] = useState(null);
 
   const wrongTimerRef = useRef(null);
   const opponentTimerRef = useRef(null);
@@ -30,6 +31,7 @@ export default function DrillSession({ line, playerColor, onBack, autoAdvance, o
     setMoveIndex(0);
     setStatus("playing");
     setFlashWrong(false);
+    setSelectedSquare(null);
   }
 
   // Auto-advance to next line after completion
@@ -95,11 +97,13 @@ export default function DrillSession({ line, playerColor, onBack, autoAdvance, o
 
     const gameCopy = new Chess(game.fen());
 
-    // Determine promotion piece
+    // Determine promotion piece (works for both drag and click-to-move)
+    const pieceOnSource = game.get(sourceSquare);
     const isPromotion =
-      piece[1] === "P" &&
-      ((piece[0] === "w" && targetSquare[1] === "8") ||
-        (piece[0] === "b" && targetSquare[1] === "1"));
+      pieceOnSource &&
+      pieceOnSource.type === "p" &&
+      ((pieceOnSource.color === "w" && targetSquare[1] === "8") ||
+        (pieceOnSource.color === "b" && targetSquare[1] === "1"));
 
     let moveResult;
     try {
@@ -126,6 +130,7 @@ export default function DrillSession({ line, playerColor, onBack, autoAdvance, o
     }
 
     // Correct move
+    setSelectedSquare(null);
     setGame(gameCopy);
     const nextIdx = moveIndex + 1;
     setMoveIndex(nextIdx);
@@ -140,7 +145,44 @@ export default function DrillSession({ line, playerColor, onBack, autoAdvance, o
     return true;
   }
 
+  function onSquareClick(square) {
+    if (status !== "playing") return;
+
+    if (selectedSquare === null) {
+      // Select only if there's a piece belonging to the player on that square
+      const piece = game.get(square);
+      if (
+        piece &&
+        ((playerColor === "white" && piece.color === "w") ||
+          (playerColor === "black" && piece.color === "b"))
+      ) {
+        setSelectedSquare(square);
+      }
+    } else if (selectedSquare === square) {
+      // Deselect
+      setSelectedSquare(null);
+    } else {
+      // Try to move from selectedSquare to square
+      const moved = onPieceDrop(selectedSquare, square, null);
+      setSelectedSquare(moved ? null : null);
+      if (!moved) {
+        // Maybe they're clicking a different piece of their own
+        const piece = game.get(square);
+        if (
+          piece &&
+          ((playerColor === "white" && piece.color === "w") ||
+            (playerColor === "black" && piece.color === "b"))
+        ) {
+          setSelectedSquare(square);
+        } else {
+          setSelectedSquare(null);
+        }
+      }
+    }
+  }
+
   function triggerWrong() {
+    setSelectedSquare(null);
     setStatus("wrong");
     setFlashWrong(true);
     clearTimeout(wrongTimerRef.current);
@@ -170,9 +212,15 @@ export default function DrillSession({ line, playerColor, onBack, autoAdvance, o
         <Chessboard
           position={game.fen()}
           onPieceDrop={onPieceDrop}
+          onSquareClick={onSquareClick}
           boardOrientation={boardOrientation}
           boardWidth={boardWidth}
           arePiecesDraggable={isPlayerTurn}
+          customSquareStyles={
+            selectedSquare
+              ? { [selectedSquare]: { background: "rgba(255, 255, 0, 0.5)" } }
+              : {}
+          }
         />
         <div className={`board-overlay${flashWrong ? " flash-wrong" : ""}`} />
       </div>
